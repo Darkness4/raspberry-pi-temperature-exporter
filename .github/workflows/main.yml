@@ -32,7 +32,7 @@ jobs:
           file: ./Dockerfile
           platforms: linux/arm64
           push: false
-          tags: darkness4/raspberry-pi-temperature-expoter:latest
+          tags: darkness4/raspberry-pi-temperature-exporter:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -59,7 +59,7 @@ jobs:
           platforms: linux/arm64
           push: true
           tags: |
-            ghcr.io/darkness4/raspberry-pi-temperature-expoter:latest
-            ghcr.io/darkness4/raspberry-pi-temperature-expoter:${{ steps.get_version.outputs.VERSION }}
+            ghcr.io/darkness4/raspberry-pi-temperature-exporter:latest
+            ghcr.io/darkness4/raspberry-pi-temperature-exporter:${{ steps.get_version.outputs.VERSION }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
