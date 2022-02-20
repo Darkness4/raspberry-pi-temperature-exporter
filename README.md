@@ -1,8 +1,10 @@
-# A prometheus exporter for Submer Smartpod
+# A prometheus exporter for Raspberry pi
 
 ## Usage
 
 ```sh
 go build -o app .
-./app --host <host> --port <port> --api-url http://10.10.3.7/api/realTime
+./app --host <host> --port <port>
 ```
+
+Then you can access `/metrics`.
