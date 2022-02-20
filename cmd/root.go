@@ -19,6 +19,7 @@ import (
 var (
 	host    net.IP
 	port    int
+	sysfs   string
 	rootCmd = &cobra.Command{
 		Use:   "raspberry-pi-temperature-exporter",
 		Short: "A temperature exporter for rasberry pi.",
@@ -43,7 +44,7 @@ var (
 func record() {
 	for {
 		err := func() error {
-			b, err := ioutil.ReadFile("/sys/class/thermal/thermal_zone0/temp")
+			b, err := ioutil.ReadFile(fmt.Sprintf("%s/class/thermal/thermal_zone0/temp", sysfs))
 			if err != nil {
 				return err
 			}
@@ -65,6 +66,7 @@ func record() {
 func init() {
 	rootCmd.PersistentFlags().IPVar(&host, "host", net.IPv4zero, "listening host")
 	rootCmd.PersistentFlags().IntVar(&port, "port", 3000, "listening port")
+	rootCmd.PersistentFlags().StringVar(&sysfs, "path.sysfs", "/sys", "/sys directory")
 }
 
 func Execute() error {
