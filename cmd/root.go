@@ -8,6 +8,8 @@ import (
 	"net"
 	"net/http"
 	"strconv"
+	"strings"
+	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -20,10 +22,32 @@ var (
 	host    net.IP
 	port    int
 	sysfs   string
+	gauges  map[string]prometheus.Gauge
 	rootCmd = &cobra.Command{
 		Use:   "raspberry-pi-temperature-exporter",
 		Short: "A temperature exporter for rasberry pi.",
 		Run: func(cmd *cobra.Command, args []string) {
+			gauges = make(map[string]prometheus.Gauge)
+			dir := fmt.Sprintf("%s/class/thermal", sysfs)
+
+			// Find thermal sensors
+			infos, err := ioutil.ReadDir(dir)
+			if err != nil {
+				panic(err)
+			}
+
+			// Filter by "thermal_zone*"
+			for _, info := range infos {
+				if info.IsDir() && strings.HasPrefix(info.Name(), "thermal_zone") {
+					gauges[info.Name()] = promauto.NewGauge(prometheus.GaugeOpts{
+						Namespace: "rpi",
+						Subsystem: info.Name(),
+						Name:      "temp",
+						Help:      "The temperature of the raspberry pi (°C)",
+					})
+				}
+			}
+
 			go record()
 
 			log.Printf("Serving at %s:%d\n", host, port)
@@ -33,33 +57,37 @@ var (
 			}
 		},
 	}
-	temperature = promauto.NewGauge(prometheus.GaugeOpts{
-		Namespace: "rpi",
-		Subsystem: "thermal_zone0",
-		Name:      "temp",
-		Help:      "The temperature of the raspberry pi (°C)",
-	})
 )
 
 func record() {
+	thermaldir := fmt.Sprintf("%s/class/thermal", sysfs)
 	for {
-		err := func() error {
-			b, err := ioutil.ReadFile(fmt.Sprintf("%s/class/thermal/thermal_zone0/temp", sysfs))
-			if err != nil {
-				return err
-			}
-			temp, err := strconv.ParseFloat(string(bytes.TrimSpace(b)), 64)
-			if err != nil {
-				return err
-			}
-			temp = temp / 1000.0
-			temperature.Set(temp)
-			return nil
-		}()
-		if err != nil {
-			log.Printf("error: %+v\n", err)
+		// Parallel calls to the sensors
+		var wait sync.WaitGroup
+		for name, gauge := range gauges {
+			wait.Add(1)
+			go func(name string, gauge prometheus.Gauge) {
+				defer wait.Done()
+				err := func() error {
+					b, err := ioutil.ReadFile(fmt.Sprintf("%s/%s/temp", thermaldir, name))
+					if err != nil {
+						return err
+					}
+					temp, err := strconv.ParseFloat(string(bytes.TrimSpace(b)), 64)
+					if err != nil {
+						return err
+					}
+					temp = temp / 1000.0
+					gauge.Set(temp)
+					return nil
+				}()
+				if err != nil {
+					log.Printf("error: %+v\n", err)
+				}
+			}(name, gauge)
 		}
 		time.Sleep(time.Second)
+		wait.Wait()
 	}
 }
 

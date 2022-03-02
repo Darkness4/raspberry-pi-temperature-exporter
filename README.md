@@ -8,3 +8,5 @@ go build -o app .
 ```
 
 Then you can access `/metrics`.
+
+(TBH, it also compatible to anything which has the path "/sys/class/thermal/thermal_zone\*/temp").
