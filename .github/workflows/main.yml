@@ -30,7 +30,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           file: ./Dockerfile
-          platforms: linux/arm64,linux/arm/v7
+          platforms: linux/arm64
           push: false
           tags: darkness4/raspberry-pi-temperature-exporter:latest
           cache-from: type=gha
@@ -83,7 +83,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           file: ./Dockerfile
-          platforms: linux/arm64,linux/arm/v7
+          platforms: linux/arm/v7
           push: false
           tags: darkness4/raspberry-pi-temperature-exporter:latest
           cache-from: type=gha
