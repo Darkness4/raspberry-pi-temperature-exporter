@@ -38,7 +38,8 @@ var (
 
 			// Filter by "thermal_zone*"
 			for _, info := range infos {
-				if info.IsDir() && strings.HasPrefix(info.Name(), "thermal_zone") {
+				if strings.HasPrefix(info.Name(), "thermal_zone") {
+					log.Printf("found %s\n", info.Name())
 					gauges[info.Name()] = promauto.NewGauge(prometheus.GaugeOpts{
 						Namespace: "rpi",
 						Subsystem: info.Name(),
