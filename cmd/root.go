@@ -40,11 +40,20 @@ var (
 			for _, info := range infos {
 				if strings.HasPrefix(info.Name(), "thermal_zone") {
 					log.Printf("found %s\n", info.Name())
+					b, err := ioutil.ReadFile(fmt.Sprintf("%s/%s/type", dir, info.Name()))
+					if err != nil {
+						panic(err)
+					}
+
 					gauges[info.Name()] = promauto.NewGauge(prometheus.GaugeOpts{
-						Namespace: "rpi",
-						Subsystem: info.Name(),
+						Namespace: "linux",
+						Subsystem: "thermal_zone",
 						Name:      "temp",
-						Help:      "The temperature of the raspberry pi (°C)",
+						Help:      "Temperature indicated by a linux device (°C)",
+						ConstLabels: prometheus.Labels{
+							"sensor": info.Name(),
+							"type":   string(bytes.TrimSpace(b)),
+						},
 					})
 				}
 			}

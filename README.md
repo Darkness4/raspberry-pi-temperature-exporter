@@ -1,4 +1,6 @@
-# A prometheus exporter for Raspberry pi
+# A prometheus exporter for Raspberry pi (deprecated)
+
+Just use a node exporter which already exports `node_thermal_zone_temp`.
 
 ## Usage
 
